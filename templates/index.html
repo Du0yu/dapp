@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store and Retrieve Money</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Store and Retrieve Money</h1>
+        
+        <h2>Store Money</h2>
+        <input type="number" id="amount" placeholder="Amount (in Wei)">
+        <button id="storeBtn">Store</button>\
+
+        <h2>Retrieve Money</h2>
+        <button id="retrieveBtn">Retrieve</button>
+        <div class="result" id="retrieveResult"></div>
+    </div>
+
+    <!-- Include Web3.js -->
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script>
+        // Ensure the browser has access to an Ethereum provider
+        if (typeof window.ethereum !== 'undefined') {
+            // Initialize web3
+            const web3 = new Web3(window.ethereum);
+
+            // Your contract ABI
+            const contractABI = [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "num",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "store_m",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "retrieve_m",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ];
+
+            // Your contract address
+            const contractAddress = '0xD5E2171C18154A50e87E424A53b7C44ACEd66762';
+
+            // Create contract instance
+            const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+            // Store money function
+            document.getElementById('storeBtn').onclick = async function() {
+                const amount = document.getElementById('amount').value;
+
+                try {
+                    console.log("start request")
+                    await ethereum.request({ method: 'eth_requestAccounts' });
+                    const accounts = await web3.eth.getAccounts();
+                    const sender = accounts[0];
+                    console.log(accounts[0]);
+                    // Call the store_m function from the smart contract
+                    await contract.methods.store_m(amount).send({ from: sender });
+
+                    document.getElementById('retrieveResult').textContent = 'Money stored successfully!';
+                } catch (error) {
+                    document.getElementById('retrieveResult').textContent = `Error: ${error.message}`;
+                }
+            };
+
+            // Retrieve money function
+            document.getElementById('retrieveBtn').onclick = async function() {
+                try {
+                    // Call the retrieve_m function from the smart contract
+                    const amount = await contract.methods.retrieve_m().call();
+                    document.getElementById('retrieveResult').textContent = `Stored amount: ${amount} Wei`;
+                } catch (error) {
+                    document.getElementById('retrieveResult').textContent = `Error: ${error.message}`;
+                }
+            };
+        } else {
+            document.getElementById('retrieveResult').textContent = 'Please install MetaMask!';
+        }
+    </script>
+</body>
+</html>
